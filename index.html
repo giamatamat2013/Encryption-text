@@ -65,7 +65,7 @@
 <body>
 <div class="content">
     <h1>הצפנה ופענוח סיסמאות</h1>
-    <div class="version">גרסה 1.3.3</div>
+    <div class="version">גרסה 2.0.0 - מכיל 16 סוגי הצפנות!</div>
 
     <div class="input-group">
         <label for="cipherType">בחירת סוג צופן:</label>
@@ -74,6 +74,17 @@
             <option value="vigenere">ריבוע ויז'נר</option>
             <option value="mono">מונואלפביטי</option>
             <option value="enigma">אניגמה</option>
+            <option value="caesar">קיסר (שינוי)</option>
+            <option value="rot13">ROT13</option>
+            <option value="railfence">רוסקה (Rail Fence)</option>
+            <option value="playfair">Playfair</option>
+            <option value="polybius">ריבוע פוליביוס</option>
+            <option value="base64">Base64</option>
+            <option value="morse">קוד מורס</option>
+            <option value="hash">SHA256 Hash</option>
+            <option value="scytale">סקיטלה יוונית</option>
+            <option value="bacon">בייקון (Bacon)</option>
+            <option value="fleissner">Fleissner Grill</option>
         </select>
     </div>
 
@@ -83,6 +94,57 @@
             <input type="password" id="key" placeholder="הכנס מפתח להצפנה" />
             <button class="copy-button" type="button" onclick="toggleVisibility('key')">הסתר/הצג</button>
         </div>
+    </div>
+
+    <!-- קיסר -->
+    <div class="input-group" id="caesarGroup" style="display:none;">
+        <label for="caesarShift">גודל השינוי (1-25):</label>
+        <input type="number" id="caesarShift" min="1" max="25" value="3" />
+    </div>
+
+    <!-- Morse -->
+    <div class="input-group" id="morseGroup" style="display:none;">
+        <label for="morseLanguage">בחר שפה:</label>
+        <select id="morseLanguage">
+            <option value="english">אנגלית</option>
+            <option value="hebrew">עברית</option>
+        </select>
+    </div>
+
+    <!-- Rail Fence -->
+    <div class="input-group" id="railfenceGroup" style="display:none;">
+        <label for="railfenceKey">מספר שורות (2-10):</label>
+        <input type="number" id="railfenceKey" min="2" max="10" value="3" />
+    </div>
+
+    <!-- Playfair -->
+    <div class="input-group" id="playfairGroup" style="display:none;">
+        <label for="playfairKey">מילת מפתח ל-Playfair:</label>
+        <div class="field-with-button">
+            <input type="password" id="playfairKey" placeholder="מילת מפתח" />
+            <button class="copy-button" type="button" onclick="toggleVisibility('playfairKey')">הסתר/הצג</button>
+        </div>
+    </div>
+
+    <!-- Scytale -->
+    <div class="input-group" id="scytaleGroup" style="display:none;">
+        <label for="scytaleKey">רוחב הרוסקה:</label>
+        <input type="number" id="scytaleKey" min="2" max="50" value="4" />
+    </div>
+
+    <!-- Bacon -->
+    <div class="input-group" id="baconGroup" style="display:none;">
+        <label for="baconType">בחר סוג Bacon:</label>
+        <select id="baconType">
+            <option value="a">Type A</option>
+            <option value="b">Type B</option>
+        </select>
+    </div>
+
+    <!-- Fleissner -->
+    <div class="input-group" id="fleissnerGroup" style="display:none;">
+        <label for="fleissnerSize">גודל הגריל (4, 6, 8...):</label>
+        <input type="number" id="fleissnerSize" min="4" max="16" step="2" value="4" />
     </div>
 
     <div class="input-group" id="vigenereKeyGroup" style="display:none;">
@@ -97,8 +159,25 @@
         <label for="monoType">בחר סוג החלפה:</label>
         <select id="monoType">
             <option value="other" selected>אחר</option>
-            <option value="etbash">אתבש (עברית+אנגלית)</option>
+            <option value="atbash">אתבש</option>
         </select>
+        
+        <div id="atbashLanguageGroup" style="display:none;">
+            <label for="atbashLanguage">בחר שפה:</label>
+            <select id="atbashLanguage">
+                <option value="auto">זיהוי אוטומטי</option>
+                <option value="english">אנגלית</option>
+                <option value="hebrew">עברית</option>
+                <option value="german">גרמנית</option>
+                <option value="french">צרפתית</option>
+                <option value="spanish">ספרדית</option>
+                <option value="italian">איטלקית</option>
+                <option value="portuguese">פורטוגלית</option>
+                <option value="turkish">טורקית</option>
+                <option value="russian">רוסית</option>
+            </select>
+        </div>
+        
         <label for="monoKey" id="monoLabel">החלפות מונואלפביטיות:</label>
         <div class="field-with-button" id="monoField">
             <textarea id="monoKey" placeholder="לדוגמה: A=Q,B=M,C=% ..."></textarea>
@@ -165,6 +244,117 @@ function parseMonoMapping(mapping) { const obj = {}; mapping.split(',').forEach(
 function encryptMono(text, mapping) { const map = parseMonoMapping(mapping); return text.split('').map(c => map[c] || c).join(''); }
 function decryptMono(text, mapping) { const map = parseMonoMapping(mapping); const reverseMap = Object.fromEntries(Object.entries(map).map(([k,v]) => [v,k])); return text.split('').map(c => reverseMap[c] || c).join(''); }
 
+// =================== קיסר ===================
+function encryptCaesar(text, shift) { shift = parseInt(shift) % 26; return text.split('').map(c => { if(/[a-z]/.test(c)) return String.fromCharCode((c.charCodeAt(0)-97+shift)%26+97); if(/[A-Z]/.test(c)) return String.fromCharCode((c.charCodeAt(0)-65+shift)%26+65); return c; }).join(''); }
+function decryptCaesar(text, shift) { return encryptCaesar(text, 26-parseInt(shift)); }
+
+// =================== ROT13 ===================
+function encryptROT13(text) { return text.replace(/[a-zA-Z]/g, c => { const code = c.charCodeAt(0) + 13; const limit = c<='Z'?90:122; return String.fromCharCode(code<=limit?code:code-26); }); }
+function decryptROT13(text) { return encryptROT13(text); }
+
+// =================== אתבש עם תמיכה בשפות שונות ===================
+const ATBASH_LANGUAGES = {
+    english: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    hebrew: 'אבגדהוזחטיכלמנסעפצקרשת',
+    german: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜSS',
+    french: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÀÂÄÆÈÉÊËÌÎÏÒÔÖÙÛÜŒ',
+    spanish: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÑÜ',
+    italian: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÀÈÉÌÒÙ',
+    portuguese: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÁÂÃÉÊÍÓÔÕÚÜ',
+    turkish: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÇÐĞİÖŞÜ',
+    russian: 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'
+};
+
+function detectLanguage(text) {
+    text = text.toUpperCase();
+    if(/[א-ת]/.test(text)) return 'hebrew';
+    if(/[ÄÖÜẞ]/.test(text)) return 'german';
+    if(/[ÀÂÄÆÈÉÊË]/.test(text)) return 'french';
+    if(/[ÁÉÍÓÚÑÜ]/.test(text)) return 'spanish';
+    if(/[ÀÈÉÌÒÙ]/.test(text)) return 'italian';
+    if(/[ÁÂÃÉÊÍÓÔÕÚÜ]/.test(text)) return 'portuguese';
+    if(/[ÇÐĞIŞÜ]/.test(text)) return 'turkish';
+    if(/[А-Я]/.test(text)) return 'russian';
+    return 'english';
+}
+
+function encryptAtbash(text, language='auto') {
+    if(language === 'auto') language = detectLanguage(text);
+    const alphabet = ATBASH_LANGUAGES[language] || ATBASH_LANGUAGES.english;
+    const result = [];
+    for(let c of text) {
+        const upper = c.toUpperCase();
+        const idx = alphabet.indexOf(upper);
+        if(idx >= 0) {
+            result.push(/[A-Z]/.test(c) ? alphabet[alphabet.length-1-idx] : alphabet[alphabet.length-1-idx].toLowerCase());
+        } else {
+            result.push(c);
+        }
+    }
+    return result.join('');
+}
+
+function decryptAtbash(text, language='auto') {
+    return encryptAtbash(text, language);
+}
+
+// =================== Rail Fence ===================
+function encryptRailFence(text, rails) { rails = parseInt(rails); if(rails<=1) return text; const fence = Array(rails).fill(null).map(()=>[]); let rail=0, dir=1; for(let c of text) { fence[rail].push(c); rail+=dir; if(rail===rails-1) dir=-1; if(rail===0) dir=1; } return fence.flat().join(''); }
+function decryptRailFence(text, rails) { rails = parseInt(rails); if(rails<=1) return text; const fence = Array(rails).fill(null).map(()=>[]); let rail=0, dir=1, idx=[]; for(let i=0;i<text.length;i++) { idx.push(rail); rail+=dir; if(rail===rails-1) dir=-1; if(rail===0) dir=1; } const lengths=Array(rails).fill(0); for(let i of idx) lengths[i]++; let pos=0; for(let i=0;i<rails;i++) { fence[i]=text.substr(pos,lengths[i]).split(''); pos+=lengths[i]; } const result=[]; rail=0; dir=1; for(let i=0;i<text.length;i++) { result.push(fence[rail].shift()); rail+=dir; if(rail===rails-1) dir=-1; if(rail===0) dir=1; } return result.join(''); }
+
+// =================== Playfair ===================
+function createPlayfairMatrix(key) { key=(key+String.fromCharCode(65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90)).toUpperCase(); const used=new Set(['J']); const matrix=[]; for(let c of key) if(!used.has(c)&&/[A-Z]/.test(c)) { used.add(c); matrix.push(c); } return matrix; }
+function encryptPlayfair(text, key) { const matrix = createPlayfairMatrix(key); text=text.toUpperCase().replace(/[^A-Z]/g,'').replace(/J/g,'I'); if(text.length%2) text+='X'; const map={}; for(let i=0;i<matrix.length;i++) map[matrix[i]]={x:i%5,y:Math.floor(i/5)}; let result=''; for(let i=0;i<text.length;i+=2) { const p1=map[text[i]],p2=map[text[i+1]]; let x1=p1.x,y1=p1.y,x2=p2.x,y2=p2.y; if(y1===y2) { x1=(x1+1)%5; x2=(x2+1)%5; } else if(x1===x2) { y1=(y1+1)%5; y2=(y2+1)%5; } else { let t=x1; x1=x2; x2=t; } result+=matrix[y1*5+x1]+matrix[y2*5+x2]; } return result; }
+function decryptPlayfair(text, key) { const matrix = createPlayfairMatrix(key); const map={}; for(let i=0;i<matrix.length;i++) map[matrix[i]]={x:i%5,y:Math.floor(i/5)}; let result=''; for(let i=0;i<text.length;i+=2) { const p1=map[text[i]],p2=map[text[i+1]]; let x1=p1.x,y1=p1.y,x2=p2.x,y2=p2.y; if(y1===y2) { x1=(x1-1+5)%5; x2=(x2-1+5)%5; } else if(x1===x2) { y1=(y1-1+5)%5; y2=(y2-1+5)%5; } else { let t=x1; x1=x2; x2=t; } result+=matrix[y1*5+x1]+matrix[y2*5+x2]; } return result; }
+
+// =================== Polybius Square ===================
+function encryptPolybius(text) { const square='ABCDEFGHIKLMNOPQRSTUVWXYZ'; const map={}; for(let i=0;i<25;i++) map[square[i]]=Math.floor(i/5)+1+''+(i%5+1); text=text.toUpperCase().replace(/J/g,'I').replace(/[^A-Z]/g,''); return text.split('').map(c=>map[c]||'').join(' '); }
+function decryptPolybius(text) { const square='ABCDEFGHIKLMNOPQRSTUVWXYZ'; text=text.replace(/\s/g,''); let result=''; for(let i=0;i<text.length;i+=2) { const row=parseInt(text[i])-1, col=parseInt(text[i+1])-1; result+=square[row*5+col]; } return result; }
+
+// =================== Base64 ===================
+function encryptBase64(text) { return btoa(unescape(encodeURIComponent(text))); }
+function decryptBase64(text) { try { return decodeURIComponent(escape(atob(text))); } catch(e) { return 'קלט לא תקין'; } }
+
+// =================== Morse Code עם תמיכה בשפות ===================
+const MORSE_CODE_EN = {
+    'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....','I':'..','J':'.---','K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.','Q':'--.-','R':'.-.','S':'...','T':'-','U':'..-','V':'...-','W':'.--','X':'-..-','Y':'-.--','Z':'--..',
+    '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.','.':".-.-.-",',':'--..--','?':'..--..','!':'-.-.--','/':'-..-.','(':'-.--.',')':'-.--.-','&':'.-...','@':'.--.-.','=':'-...-','+':'.-.-.','-':'-....-','_':'..--.-','"':'.-..-.','$':'...-..-','*':'.-.-.',':':'---...', ' ':'/'
+};
+
+const MORSE_CODE_HE = {
+    'א':'.-','ב':'-...','ג':'-.-.','ד':'-..','ה':'.','ו':'..-.','ז':'--.','ח':'....','ט':'..','י':'.---','כ':'-.-','ל':'.-..','מ':'--','ן':'-.','נ':'-.','ס':'...','ע':'-','פ':'.--.','ץ':'--.-','צ':'.-.','ק':'--','ר':'.-.','ש':'...','ת':'-',
+    '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.','.':".-.-.-",',':'--..--','?':'..--..','!':'-.-.--','/':'-..-.','(':'-.--.',')':'-.--.-','&':'.-...','@':'.--.-.','=':'-...-','+':'.-.-.','-':'-....-','_':'..--.-','"':'.-..-.','$':'...-..-','*':'.-.-.',' ':'/'
+};
+function encryptMorse(text, language='english') {
+    const morseDict = language === 'hebrew' ? MORSE_CODE_HE : MORSE_CODE_EN;
+    return text.toUpperCase().split('').map(c => morseDict[c] || (c === ' ' ? '/' : '?')).join(' ');
+}
+
+function decryptMorse(text, language='english') {
+    const morseDict = language === 'hebrew' ? MORSE_CODE_HE : MORSE_CODE_EN;
+    const REVERSE_MORSE = Object.fromEntries(Object.entries(morseDict).map(([k,v])=>[v,k]));
+    return text.split(' ').map(m => REVERSE_MORSE[m] || '?').join('');
+}
+
+// =================== SHA256 Hash ===================
+function encryptSHA256(text) { if(typeof(sha256)==='undefined') { return 'ספריית SHA256 לא זמינה'; } return sha256(text); }
+function decryptSHA256(text) { return 'לא ניתן לפענח Hash'; }
+
+// =================== סקיטלה יוונית ===================
+function encryptScytale(text, diameter) { diameter = parseInt(diameter); if(diameter<=0) return text; let result=''; for(let i=0; i<text.length; i+=diameter) result += text.substr(i, diameter); return result; }
+function decryptScytale(text, diameter) { diameter = parseInt(diameter); if(diameter<=0) return text; const rows = Math.ceil(text.length/diameter); const grid = []; for(let i=0;i<rows;i++) grid.push(text.substr(i*diameter, diameter).split('')); let result=''; for(let i=0;i<diameter;i++) for(let j=0;j<rows;j++) if(grid[j][i]) result += grid[j][i]; return result; }
+
+// =================== Bacon Cipher ===================
+const BACON_A = {A:'AAAAA',B:'AAAAB',C:'AAABA',D:'AAABB',E:'AABAA',F:'AABAB',G:'AABBA',H:'AABBB',I:'ABAAA',J:'ABAAB',K:'ABABA',L:'ABABB',M:'ABBAA',N:'ABBAB',O:'ABBBA',P:'ABBBB',Q:'BAAAA',R:'BAAAB',S:'BAABA',T:'BAABB',U:'BABAA',V:'BABAB',W:'BABBA',X:'BABBB',Y:'BBAAA',Z:'BBAAB'};
+const BACON_B = {A:'AAAAA',B:'AAAAB',C:'AAABA',D:'AAABB',E:'AABAA',F:'AABAB',G:'AABBA',H:'AABBB',I:'ABAAA',J:'ABAAB',K:'ABABA',L:'ABABB',M:'ABBAA',N:'ABBAB',O:'ABBBA',P:'ABBBB',Q:'BAAAA',R:'BAAAB',S:'BAABA',T:'BAABB',U:'BABAA',V:'BABAB',W:'BABBA',X:'BABBB',Y:'BBAAA',Z:'BBAAB'};
+function encryptBacon(text, type='a') { const table = type==='a' ? BACON_A : BACON_B; return text.toUpperCase().replace(/[^A-Z]/g,'').split('').map(c=>table[c]||'').join(' '); }
+function decryptBacon(text, type='a') { const table = type==='a' ? BACON_A : BACON_B; const REVERSE = Object.fromEntries(Object.entries(table).map(([k,v])=>[v,k])); return text.split(' ').map(c=>REVERSE[c]||'?').join(''); }
+
+// =================== Fleissner Grill ===================
+function encryptFleissner(text, size=4) { size=parseInt(size); const grid=Array(size*size).fill(0); for(let i=0;i<size;i++)for(let j=0;j<size;j++) if((i+j)%2===0) grid[i*size+j]=1; let result=''; let pos=0; for(let i=0;i<4;i++) { for(let j=0;j<size*size;j++) { if(grid[j]) { if(pos<text.length) result+=text[pos++]; } } let newGrid=Array(size*size).fill(0); for(let j=0;j<size*size;j++) { let r=Math.floor(j/size),c=j%size; newGrid[c*size+(size-1-r)]=grid[j]; } grid.splice(0,grid.length,...newGrid); } return result+text.substr(pos); }
+function decryptFleissner(text, size=4) { return encryptFleissner(text, size); }
+
+
 // =================== קוד אניגמה ===================
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 const ROTORS = { I: { wiring: "EKMFLGDQVZNTOWYHXUSPAIBRCJ", notch: "Q" }, II: { wiring: "AJDKSIRUXBLHWTMCQGZNPYFVOE", notch: "E" }, III: { wiring: "BDFHJLCPRTXVZNYEIWGAKMUSQO", notch: "V" }, IV: { wiring: "ESOVPZJAYQUIRHXLNFTGKDCMWB", notch: "J" }, V: { wiring: "VZBRGITYUPSDNHLXAWMJQOFECK", notch: "Z" } };
@@ -186,8 +376,14 @@ function encrypt() {
             const key = document.getElementById('vigenereKey').value; if (!key) { document.getElementById('encryptedText').value = 'יש להזין מילת מפתח'; return; }
             encrypted = encryptVigenere(plainText, key);
         } else if (cipher === 'mono') {
-            const mapping = document.getElementById('monoKey').value; if (!mapping) { document.getElementById('encryptedText').value = 'יש להזין החלפות'; return; }
-            encrypted = encryptMono(plainText, mapping);
+            const monoType = document.getElementById('monoType').value;
+            if (monoType === 'atbash') {
+                const language = document.getElementById('atbashLanguage').value;
+                encrypted = encryptAtbash(plainText, language);
+            } else {
+                const mapping = document.getElementById('monoKey').value; if (!mapping) { document.getElementById('encryptedText').value = 'יש להזין החלפות'; return; }
+                encrypted = encryptMono(plainText, mapping);
+            }
         } else if (cipher === 'enigma') {
             const rotorLeft = ROTORS[document.getElementById("rotorLeft").value];
             const rotorMiddle = ROTORS[document.getElementById("rotorMiddle").value];
@@ -203,10 +399,40 @@ function encrypt() {
                 plugPairs.map(p=>p.toUpperCase().split(""))
             );
             encrypted = enigma.encode(plainText);
+        } else if (cipher === 'caesar') {
+            const shift = document.getElementById('caesarShift').value;
+            encrypted = encryptCaesar(plainText, shift);
+        } else if (cipher === 'rot13') {
+            encrypted = encryptROT13(plainText);
+        } else if (cipher === 'railfence') {
+            const rails = document.getElementById('railfenceKey').value;
+            encrypted = encryptRailFence(plainText, rails);
+        } else if (cipher === 'playfair') {
+            const key = document.getElementById('playfairKey').value; if (!key) { document.getElementById('encryptedText').value = 'יש להזין מילת מפתח'; return; }
+            encrypted = encryptPlayfair(plainText, key);
+        } else if (cipher === 'polybius') {
+            encrypted = encryptPolybius(plainText);
+        } else if (cipher === 'base64') {
+            encrypted = encryptBase64(plainText);
+        } else if (cipher === 'morse') {
+            const language = document.getElementById('morseLanguage').value;
+            encrypted = encryptMorse(plainText, language);
+        } else if (cipher === 'hash') {
+            encrypted = encryptSHA256(plainText);
+        } else if (cipher === 'scytale') {
+            const diameter = document.getElementById('scytaleKey').value;
+            encrypted = encryptScytale(plainText, diameter);
+        } else if (cipher === 'bacon') {
+            const type = document.getElementById('baconType').value;
+            encrypted = encryptBacon(plainText, type);
+        } else if (cipher === 'fleissner') {
+            const size = document.getElementById('fleissnerSize').value;
+            encrypted = encryptFleissner(plainText, size);
         }
-    } catch(e){ encrypted='קלט לא תקין'; }
+    } catch(e){ encrypted='קלט לא תקין: '+e.message; }
     document.getElementById('encryptedText').value = encrypted;
 }
+
 function decrypt() {
     const cipher = document.getElementById('cipherType').value;
     const encryptedInput = document.getElementById('encryptedInput').value;
@@ -219,8 +445,14 @@ function decrypt() {
             const key = document.getElementById('vigenereKey').value; if (!key) { document.getElementById('decryptedText').value = 'יש להזין מילת מפתח'; return; }
             decrypted = decryptVigenere(encryptedInput, key);
         } else if (cipher === 'mono') {
-            const mapping = document.getElementById('monoKey').value; if (!mapping) { document.getElementById('decryptedText').value = 'יש להזין החלפות'; return; }
-            decrypted = decryptMono(encryptedInput, mapping);
+            const monoType = document.getElementById('monoType').value;
+            if (monoType === 'atbash') {
+                const language = document.getElementById('atbashLanguage').value;
+                decrypted = decryptAtbash(encryptedInput, language);
+            } else {
+                const mapping = document.getElementById('monoKey').value; if (!mapping) { document.getElementById('decryptedText').value = 'יש להזין החלפות'; return; }
+                decrypted = decryptMono(encryptedInput, mapping);
+            }
         } else if (cipher === 'enigma') {
             const rotorLeft = ROTORS[document.getElementById("rotorLeft").value];
             const rotorMiddle = ROTORS[document.getElementById("rotorMiddle").value];
@@ -236,8 +468,37 @@ function decrypt() {
                 plugPairs.map(p=>p.toUpperCase().split(""))
             );
             decrypted = enigma.encode(encryptedInput);
+        } else if (cipher === 'caesar') {
+            const shift = document.getElementById('caesarShift').value;
+            decrypted = decryptCaesar(encryptedInput, shift);
+        } else if (cipher === 'rot13') {
+            decrypted = decryptROT13(encryptedInput);
+        } else if (cipher === 'railfence') {
+            const rails = document.getElementById('railfenceKey').value;
+            decrypted = decryptRailFence(encryptedInput, rails);
+        } else if (cipher === 'playfair') {
+            const key = document.getElementById('playfairKey').value; if (!key) { document.getElementById('decryptedText').value = 'יש להזין מילת מפתח'; return; }
+            decrypted = decryptPlayfair(encryptedInput, key);
+        } else if (cipher === 'polybius') {
+            decrypted = decryptPolybius(encryptedInput);
+        } else if (cipher === 'base64') {
+            decrypted = decryptBase64(encryptedInput);
+        } else if (cipher === 'morse') {
+            const language = document.getElementById('morseLanguage').value;
+            decrypted = decryptMorse(encryptedInput, language);
+        } else if (cipher === 'hash') {
+            decrypted = decryptSHA256(encryptedInput);
+        } else if (cipher === 'scytale') {
+            const diameter = document.getElementById('scytaleKey').value;
+            decrypted = decryptScytale(encryptedInput, diameter);
+        } else if (cipher === 'bacon') {
+            const type = document.getElementById('baconType').value;
+            decrypted = decryptBacon(encryptedInput, type);
+        } else if (cipher === 'fleissner') {
+            const size = document.getElementById('fleissnerSize').value;
+            decrypted = decryptFleissner(encryptedInput, size);
         }
-    } catch(e){ decrypted='קלט לא תקין'; }
+    } catch(e){ decrypted='קלט לא תקין: '+e.message; }
     document.getElementById('decryptedText').value = decrypted;
 }
 
@@ -253,6 +514,14 @@ document.getElementById('cipherType').addEventListener('change', function() {
     document.getElementById('vigenereKeyGroup').style.display=(cipher==='vigenere')?'block':'none';
     document.getElementById('monoKeyGroup').style.display=(cipher==='mono')?'block':'none';
     document.getElementById('enigmaSettings').style.display=(cipher==='enigma')?'block':'none';
+    document.getElementById('caesarGroup').style.display=(cipher==='caesar')?'block':'none';
+    document.getElementById('railfenceGroup').style.display=(cipher==='railfence')?'block':'none';
+    document.getElementById('playfairGroup').style.display=(cipher==='playfair')?'block':'none';
+    document.getElementById('scytaleGroup').style.display=(cipher==='scytale')?'block':'none';
+    document.getElementById('baconGroup').style.display=(cipher==='bacon')?'block':'none';
+    document.getElementById('fleissnerGroup').style.display=(cipher==='fleissner')?'block':'none';
+    document.getElementById('morseGroup').style.display=(cipher==='morse')?'block':'none';
+    encrypt(); decrypt();
 });
 
 // למלא את הבחירות של אניגמה
@@ -273,12 +542,36 @@ document.getElementById('encryptedInput').addEventListener('input', decrypt);
 document.getElementById('key').addEventListener('input', function(){encrypt(); decrypt();});
 document.getElementById('vigenereKey').addEventListener('input', function(){encrypt(); decrypt();});
 document.getElementById('monoKey').addEventListener('input', function(){encrypt(); decrypt();});
+document.getElementById('monoType').addEventListener('change', function(){
+    const monoType = this.value;
+    const monoLabel = document.getElementById('monoLabel');
+    const monoField = document.getElementById('monoField');
+    const atbashLanguageGroup = document.getElementById('atbashLanguageGroup');
+    if (monoType === 'atbash') {
+        monoLabel.style.display = 'none';
+        monoField.style.display = 'none';
+        atbashLanguageGroup.style.display = 'block';
+    } else {
+        monoLabel.style.display = 'block';
+        monoField.style.display = 'flex';
+        atbashLanguageGroup.style.display = 'none';
+    }
+    encrypt(); decrypt();
+});
+document.getElementById('atbashLanguage').addEventListener('change', function(){encrypt(); decrypt();});
+document.getElementById('morseLanguage').addEventListener('change', function(){encrypt(); decrypt();});
 document.getElementById('rotorPositions').addEventListener('input', function(){encrypt(); decrypt();});
 document.getElementById('plugboard').addEventListener('input', function(){encrypt(); decrypt();});
 document.getElementById('rotorLeft').addEventListener('change', function(){encrypt(); decrypt();});
 document.getElementById('rotorMiddle').addEventListener('change', function(){encrypt(); decrypt();});
 document.getElementById('rotorRight').addEventListener('change', function(){encrypt(); decrypt();});
 document.getElementById('reflector').addEventListener('change', function(){encrypt(); decrypt();});
+document.getElementById('caesarShift').addEventListener('input', function(){encrypt(); decrypt();});
+document.getElementById('railfenceKey').addEventListener('input', function(){encrypt(); decrypt();});
+document.getElementById('playfairKey').addEventListener('input', function(){encrypt(); decrypt();});
+document.getElementById('scytaleKey').addEventListener('input', function(){encrypt(); decrypt();});
+document.getElementById('baconType').addEventListener('change', function(){encrypt(); decrypt();});
+document.getElementById('fleissnerSize').addEventListener('input', function(){encrypt(); decrypt();});
 
 </script>
 </body>
